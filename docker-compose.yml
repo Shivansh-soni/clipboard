@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+    nextapp:
+        build: .
+        container_name: frontend
+        ports:
+            - "2005:3000"
+        environment:
+            REDIS_HOST: redis-clipboard
+            REDIS_PORT: 6379
+        depends_on:
+            - redis
+
+    redis:
+        image: redis:alpine
+        container_name: redis-clipboard
+        ports:
+            - "6379:6379"
+        volumes:
+            - redis_data:/data # Named volume for Redis data
+
+volumes:
+    redis_data: {} # Declare the named volume for Redis
