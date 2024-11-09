@@ -35,8 +35,8 @@ export function Page() {
             setTodos([...todos, todo]);
             setNewTodo("");
             toast({
-                title: "Todo added",
-                description: "Your new todo has been added successfully.",
+                title: "Link added",
+                description: "Your new link has been added successfully.",
             });
         }
     };
