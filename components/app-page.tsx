@@ -105,21 +105,23 @@ export function Page() {
                             {todos.map((todo) => (
                                 <li
                                     key={todo.id}
-                                    className='flex items-center justify-between p-4 bg-gray-700 rounded-lg shadow'
+                                    className='flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-700 rounded-lg shadow'
                                 >
-                                    {editingId === todo.id ? (
-                                        <Input
-                                            value={editText}
-                                            onChange={(e) =>
-                                                setEditText(e.target.value)
-                                            }
-                                            className='flex-grow mr-2 bg-gray-600 text-white border-gray-500 focus:border-blue-500'
-                                        />
-                                    ) : (
-                                        <span className='flex-grow text-white'>
-                                            {todo.text}
-                                        </span>
-                                    )}
+                                    <div className='flex-grow mb-2 sm:mb-0 sm:mr-4 break-all'>
+                                        {editingId === todo.id ? (
+                                            <Input
+                                                value={editText}
+                                                onChange={(e) =>
+                                                    setEditText(e.target.value)
+                                                }
+                                                className='flex-grow mr-2 bg-gray-600 text-white border-gray-500 focus:border-blue-500'
+                                            />
+                                        ) : (
+                                            <span className='flex-grow text-white'>
+                                                {todo.text}
+                                            </span>
+                                        )}
+                                    </div>
                                     <div className='flex space-x-2'>
                                         {editingId === todo.id ? (
                                             <>
