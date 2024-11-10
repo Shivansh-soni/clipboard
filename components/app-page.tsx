@@ -135,9 +135,9 @@ export default function Home() {
                     <CardContent>
                         <form
                             onSubmit={handleAddItem}
-                            className='flex flex-col space-y-2 mb-4'
+                            className='flex flex-col sm:flex-row  w-full  mb-4 items-center gap-3'
                         >
-                            <div className='flex space-x-2'>
+                            <div className='flex items-center space-x-2 relative w-full'>
                                 <Input
                                     // type='url'
                                     value={newItem}
@@ -147,29 +147,28 @@ export default function Home() {
                                 />
                                 <Button
                                     type='submit'
-                                    className='bg-blue-600 text-white hover:bg-blue-700'
+                                    className='bg-blue-600 text-white hover:bg-blue-700 absolute  right-0'
                                 >
-                                    <Plus className='h-4 w-4 mr-2 text-white' />
-                                    Add Item
+                                    <Plus className='h-4 w-4  text-white' />
                                 </Button>
-                                <div className='flex items-center justify-center'>
-                                    <Input
-                                        ref={fileInputRef}
-                                        type='file'
-                                        accept='image/*'
-                                        onChange={handleImageUpload}
-                                        className='hidden'
-                                    />
-                                    <Button
-                                        onClick={() =>
-                                            fileInputRef.current?.click()
-                                        }
-                                        className='bg-black text-white hover:bg-black hover:drop-shadow-lg hover:bg-gray-950'
-                                    >
-                                        <ImageIcon className='h-4 w-4 mr-2' />{" "}
-                                        Add Image
-                                    </Button>
-                                </div>
+                            </div>
+                            <div className='flex items-center justify-center'>
+                                <Input
+                                    ref={fileInputRef}
+                                    type='file'
+                                    accept='image/*'
+                                    onChange={handleImageUpload}
+                                    className='hidden'
+                                />
+                                <Button
+                                    onClick={() =>
+                                        fileInputRef.current?.click()
+                                    }
+                                    className='bg-black text-white hover:bg-black hover:drop-shadow-lg '
+                                >
+                                    <ImageIcon className='h-4 w-4 mr-2' /> Add
+                                    Image
+                                </Button>
                             </div>
                         </form>
                         <ul className='space-y-4'>
