@@ -1,5 +1,5 @@
 version: "3.9"
-
+name: central-clipboard
 services:
     nextapp:
         build: .
@@ -9,16 +9,18 @@ services:
         environment:
             REDIS_HOST: redis-clipboard
             REDIS_PORT: 6379
+        restart: unless-stopped
         depends_on:
             - redis
 
     redis:
         image: redis:alpine
         container_name: redis-clipboard
+        restart: unless-stopped
         ports:
             - "6379:6379"
         volumes:
-            - redis_data:/data # Named volume for Redis data
+            - redis_data:/data
 
 volumes:
-    redis_data: {} # Declare the named volume for Redis
+    redis_data: {}

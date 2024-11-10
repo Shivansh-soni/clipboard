@@ -1,80 +1,125 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Clipboard, Pencil, Trash, Check, X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
+import {
+    Check,
+    Clipboard,
+    Image as ImageIcon,
+    Pencil,
+    Plus,
+    Trash,
+    X,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-    addTodo,
-    deleteTodo,
-    getTodos,
-    updateTodo,
+    addItem,
+    deleteItem,
+    getItems,
+    updateItem,
 } from "@/lib/actions/redis.actions";
+import Image from "next/image";
+import Link from "next/link";
+import toast from "react-hot-toast";
 
-export function Page() {
-    const [todos, setTodos] = useState<any[]>([]);
-    const [newTodo, setNewTodo] = useState("");
-    const [editingId, setEditingId] = useState(null);
-    const [editText, setEditText] = useState("");
-    const { toast } = useToast();
+interface ClipboardItem {
+    id: string;
+    type: "link" | "image" | "text";
+    content: string;
+}
+
+export default function Home() {
+    const [items, setItems] = useState<ClipboardItem[]>([]);
+    const [newItem, setNewItem] = useState("");
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editContent, setEditContent] = useState("");
+    const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        const fetchTodos = async () => {
-            const fetchedTodos = await getTodos();
-            setTodos(fetchedTodos);
+        const fetchItems = async () => {
+            const fetchedItems = await getItems();
+            setItems(fetchedItems);
         };
-        fetchTodos();
+
+        fetchItems();
     }, []);
 
-    const handleAddTodo = async (e: any) => {
+    const handleAddItem = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (newTodo.trim()) {
-            const todo = await addTodo(newTodo);
-            setTodos([...todos, todo]);
-            setNewTodo("");
-            toast({
-                title: "Link added",
-                description: "Your new link has been added successfully.",
-            });
+        if (newItem.trim()) {
+            if (
+                newItem.startsWith("http://") ||
+                newItem.startsWith("https://")
+            ) {
+                const item: ClipboardItem = await addItem({
+                    type: "link",
+                    text: newItem,
+                });
+                setItems([...items, item]);
+                setNewItem("");
+                toast.success("Link has been added successfully.");
+            } else {
+                const item: ClipboardItem = await addItem({
+                    type: "text",
+                    text: newItem,
+                });
+                setItems([...items, item]);
+                setNewItem("");
+                toast.success("Text has been added successfully.");
+            }
         }
     };
 
-    const handleUpdateTodo = async (id: string) => {
-        if (editText.trim()) {
-            const updatedTodo = await updateTodo(id, editText);
-            setTodos(
-                todos.map((todo) => (todo.id === id ? updatedTodo : todo))
+    const handleUpdateItem = async (id: string) => {
+        if (editContent.trim()) {
+            const updatedItem = await updateItem(id, editContent);
+            setItems(
+                items.map((item) =>
+                    item.id === id ? updatedItem ?? item : item
+                )
             );
             setEditingId(null);
-            toast({
-                title: "Todo updated",
-                description: "Your todo has been updated successfully.",
-            });
+            toast.success("Your item has been updated successfully.");
         }
     };
 
-    const handleDeleteTodo = async (id: string) => {
-        await deleteTodo(id);
-        setTodos(todos.filter((todo) => todo.id !== id));
-        toast({
-            title: "Todo deleted",
-            description: "Your todo has been deleted successfully.",
-        });
+    const handleDeleteItem = async (id: string) => {
+        await deleteItem(id);
+        setItems(items.filter((item) => item.id !== id));
+        toast.success("Your item has been deleted successfully.");
     };
 
-    const handleCopy = (text: string) => {
-        navigator.clipboard.writeText(text);
-        toast({
-            title: "Copied to clipboard",
-            description: "The todo has been copied to your clipboard.",
-        });
+    const handleCopy = (content: string) => {
+        navigator.clipboard.writeText(content);
+        toast.success("The content has been copied to your clipboard.");
+    };
+
+    const handleImageUpload = async (
+        e: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+                const base64String = reader.result as string;
+                const item = await addItem({
+                    type: "image",
+                    text: base64String,
+                });
+                setItems([...items, item]);
+                toast.success("Image has been added successfully.");
+            };
+            reader.readAsDataURL(file);
+        }
+        setIsImagePickerOpen(false);
     };
 
     return (
         <div className='min-h-screen bg-gray-900 text-white'>
-            <div className='container mx-auto p-4 max-w-2xl'>
+            <div className='container mx-auto p-4 max-w-3xl'>
                 <Card className='bg-gray-800 border-gray-700'>
                     <CardHeader>
                         <CardTitle className='text-3xl font-bold text-center text-white'>
@@ -83,53 +128,95 @@ export function Page() {
                     </CardHeader>
                     <CardContent>
                         <form
-                            onSubmit={handleAddTodo}
-                            className='flex space-x-2 mb-4'
+                            onSubmit={handleAddItem}
+                            className='flex flex-col space-y-2 mb-4'
                         >
-                            <Input
-                                type='text'
-                                value={newTodo}
-                                onChange={(e) => setNewTodo(e.target.value)}
-                                placeholder='Add a new todo'
-                                className='flex-grow bg-gray-700 text-white border-gray-600 focus:border-blue-500'
-                            />
-                            <Button
-                                type='submit'
-                                className='bg-blue-600 hover:bg-blue-700'
-                            >
-                                <Plus className='h-4 w-4 mr-2' />
-                                Add
-                            </Button>
+                            <div className='flex space-x-2'>
+                                <Input
+                                    // type='url'
+                                    value={newItem}
+                                    onChange={(e) => setNewItem(e.target.value)}
+                                    placeholder='Add a new item'
+                                    className='flex-grow bg-gray-700 text-white border-gray-600 focus:border-blue-500'
+                                />
+                                <Button
+                                    type='submit'
+                                    className='bg-blue-600 hover:bg-blue-700'
+                                >
+                                    <Plus className='h-4 w-4 mr-2 text-white' />
+                                    Add Item
+                                </Button>
+                                <div className='flex items-center justify-center'>
+                                    <Input
+                                        ref={fileInputRef}
+                                        type='file'
+                                        accept='image/*'
+                                        onChange={handleImageUpload}
+                                        className='hidden'
+                                    />
+                                    <Button
+                                        onClick={() =>
+                                            fileInputRef.current?.click()
+                                        }
+                                        className='bg-black text-white hover:bg-black hover:drop-shadow-lg hover:bg-gray-950'
+                                    >
+                                        <ImageIcon className='h-4 w-4 mr-2' />{" "}
+                                        Add Image
+                                    </Button>
+                                </div>
+                            </div>
                         </form>
                         <ul className='space-y-4'>
-                            {todos.map((todo) => (
+                            {items.map((item) => (
                                 <li
-                                    key={todo.id}
+                                    key={item.id}
                                     className='flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-700 rounded-lg shadow'
                                 >
                                     <div className='flex-grow mb-2 sm:mb-0 sm:mr-4 break-all'>
-                                        {editingId === todo.id ? (
+                                        {editingId === item.id ? (
                                             <Input
-                                                value={editText}
-                                                onChange={(e) =>
-                                                    setEditText(e.target.value)
+                                                type={
+                                                    item.type === "link"
+                                                        ? "url"
+                                                        : "text"
                                                 }
-                                                className='flex-grow mr-2 bg-gray-600 text-white border-gray-500 focus:border-blue-500'
+                                                value={editContent}
+                                                onChange={(e) =>
+                                                    setEditContent(
+                                                        e.target.value
+                                                    )
+                                                }
+                                                className='w-full bg-gray-600 text-white border-gray-500 focus:border-blue-500'
                                             />
+                                        ) : item.type === "text" ? (
+                                            <p className=''>{item.content}</p>
+                                        ) : item.type === "link" ? (
+                                            <Link
+                                                href={item.content}
+                                                target='_blank'
+                                                rel='noopener noreferrer'
+                                                className='text-blue-500 hover:underline'
+                                            >
+                                                {item.content}
+                                            </Link>
                                         ) : (
-                                            <span className='flex-grow text-white'>
-                                                {todo.text}
-                                            </span>
+                                            <Image
+                                                src={item.content}
+                                                width={200}
+                                                height={200}
+                                                alt='Uploaded image'
+                                                className='max-w-full h-auto rounded'
+                                            />
                                         )}
                                     </div>
-                                    <div className='flex space-x-2'>
-                                        {editingId === todo.id ? (
+                                    <div className='flex space-x-2 justify-end'>
+                                        {editingId === item.id ? (
                                             <>
                                                 <Button
                                                     size='icon'
                                                     onClick={() =>
-                                                        handleUpdateTodo(
-                                                            todo.id
+                                                        handleUpdateItem(
+                                                            item.id
                                                         )
                                                     }
                                                     className='bg-green-600 hover:bg-green-700'
@@ -149,36 +236,47 @@ export function Page() {
                                             </>
                                         ) : (
                                             <>
+                                                {item.type !== "image" && (
+                                                    <>
+                                                        <Button
+                                                            size='icon'
+                                                            variant='outline'
+                                                            onClick={() =>
+                                                                handleCopy(
+                                                                    item.content
+                                                                )
+                                                            }
+                                                            className='border-gray-500 text-gray-300 hover:bg-gray-600'
+                                                        >
+                                                            <Clipboard className='h-4 w-4' />
+                                                        </Button>
+                                                        <Button
+                                                            size='icon'
+                                                            variant='outline'
+                                                            onClick={() => {
+                                                                setEditingId(
+                                                                    item.id
+                                                                );
+                                                                setEditContent(
+                                                                    item.content
+                                                                );
+                                                            }}
+                                                            className='border-gray-500 text-gray-300 hover:bg-gray-600'
+                                                        >
+                                                            <Pencil className='h-4 w-4' />
+                                                        </Button>
+                                                    </>
+                                                )}
+
                                                 <Button
                                                     size='icon'
                                                     variant='outline'
                                                     onClick={() =>
-                                                        handleCopy(todo.text)
-                                                    }
-                                                    className='border-gray-500 text-gray-300 hover:bg-gray-600 dark'
-                                                >
-                                                    <Clipboard className='h-4 w-4' />
-                                                </Button>
-                                                <Button
-                                                    size='icon'
-                                                    variant='outline'
-                                                    onClick={() => {
-                                                        setEditingId(todo.id);
-                                                        setEditText(todo.text);
-                                                    }}
-                                                    className='border-gray-500 text-gray-300 hover:bg-gray-600 dark'
-                                                >
-                                                    <Pencil className='h-4 w-4 ' />
-                                                </Button>
-                                                <Button
-                                                    size='icon'
-                                                    variant='outline'
-                                                    onClick={() =>
-                                                        handleDeleteTodo(
-                                                            todo.id
+                                                        handleDeleteItem(
+                                                            item.id
                                                         )
                                                     }
-                                                    className='border-gray-500 text-gray-300 hover:bg-gray-600 dark'
+                                                    className='border-gray-500 text-gray-300 hover:bg-gray-600'
                                                 >
                                                     <Trash className='h-4 w-4' />
                                                 </Button>

@@ -2,42 +2,67 @@
 
 import Redis from "ioredis";
 import { revalidatePath } from "next/cache";
+import { connectRedis } from "../redis";
 
 // Function to connect to Redis
-export async function connectRedis() {
-    const redis = new Redis({
-        host: process.env.REDIS_HOST || "localhost", // Use environment variable or default to localhost
-        port: parseInt(process.env.REDIS_PORT!) || 6379, // Use environment variable or default to 6379
-    });
-    return redis;
-}
+// export async function connectRedis() {
+//     const redis = new Redis({
+//         host: process.env.REDIS_HOST!,
+//         port: Number(process.env.REDIS_PORT),
+//     });
+//     return redis;
+// }
 
-export async function addTodo(text: string) {
+export async function addItem({
+    text,
+    type,
+}: {
+    text: string;
+    type: "link" | "image" | "text";
+}) {
     const id = Date.now().toString();
     const redis = await connectRedis();
-    await redis.hset("todos", id, JSON.stringify({ id, text })); // Change hSet to hset and use id as the field
+    await redis.hset(
+        "clipboard",
+        id,
+        JSON.stringify({ id, content: text, type: type })
+    );
     revalidatePath("/");
-    return { id: id, text: text };
+
+    return {
+        id: id,
+        type: type,
+        content: text,
+    };
 }
 
-export async function updateTodo(id: string, text: string) {
+export async function updateItem(id: string, text: string) {
     const redis = await connectRedis();
-    const todo = await redis.hget("todos", id); // Change hGet to hget
+    const todo = await redis.hget("clipboard", id);
     if (todo) {
-        await redis.hset("todos", id, JSON.stringify({ id, text })); // Change hSet to hset and use id as the field
+        await redis.hset(
+            "clipboard",
+            id,
+            JSON.stringify({ id, content: text, type: "link" })
+        );
         revalidatePath("/");
-        return { id: id, text: text };
+        const data: { id: string; type: "link"; content: string } = {
+            id: id,
+            type: "link",
+            content: text,
+        };
+        return data;
     }
 }
 
-export async function deleteTodo(id: string) {
+export async function deleteItem(id: string) {
     const redis = await connectRedis();
-    await redis.hdel("todos", id); // Change hDel to hdel
+    await redis.hdel("clipboard", id);
     revalidatePath("/");
 }
 
-export async function getTodos() {
+export async function getItems() {
     const redis = await connectRedis();
-    const todos = await redis.hgetall("todos"); // Change hGetAll to hgetall
-    return Object.values(todos).map((todo) => JSON.parse(todo as string));
+    const clipboard = await redis.hgetall("clipboard");
+    return Object.values(clipboard).map((todo) => JSON.parse(todo as string));
 }
