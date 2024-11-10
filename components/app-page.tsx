@@ -141,7 +141,7 @@ export default function Home() {
                                 />
                                 <Button
                                     type='submit'
-                                    className='bg-blue-600 hover:bg-blue-700'
+                                    className='bg-blue-600 text-white hover:bg-blue-700'
                                 >
                                     <Plus className='h-4 w-4 mr-2 text-white' />
                                     Add Item
