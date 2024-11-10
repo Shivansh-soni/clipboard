@@ -116,7 +116,13 @@ export default function Home() {
         }
         setIsImagePickerOpen(false);
     };
-
+    const openImageInNewTab = (item: ClipboardItem) => {
+        const newTab: any = window.open();
+        newTab.document.write(
+            `<html><head><title>Image Preview</title></head><body style="margin:0; background-color:black; display:flex; align-items:center; justify-content:center;"><img src="${item.content}" alt="Uploaded image" style="max-width:100%; height:auto;" /></body></html>`
+        );
+        newTab.document.close(); // Close the document to render
+    };
     return (
         <div className='min-h-screen bg-gray-900 text-white'>
             <div className='container mx-auto p-4 max-w-3xl'>
@@ -201,6 +207,9 @@ export default function Home() {
                                             </Link>
                                         ) : (
                                             <Image
+                                                onClick={() =>
+                                                    openImageInNewTab(item)
+                                                }
                                                 src={item.content}
                                                 width={200}
                                                 height={200}

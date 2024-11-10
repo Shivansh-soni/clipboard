@@ -24,6 +24,7 @@ export const connectRedis = async (): Promise<any> => {
         return redisConn.conn;
     } else {
         try {
+            // const redis: any = new Redis();
             const redis: any = new Redis({
                 host: process.env.REDIS_HOST!,
                 port: Number(process.env.REDIS_PORT),
