@@ -4,6 +4,7 @@ import Redis from "ioredis";
 import { revalidatePath } from "next/cache";
 import { connectRedis } from "../redis";
 import { ClipboardItem, ItemPayload } from "@/components/app-page";
+import { deleteFile } from "@/lib/utils/file-upload";
 
 // Function to connect to Redis
 // export async function connectRedis() {
@@ -14,50 +15,110 @@ import { ClipboardItem, ItemPayload } from "@/components/app-page";
 //     return redis;
 // }
 
-export async function addItem({ content, type }: ItemPayload) {
+export async function addItem({
+  content,
+  type,
+  fileName,
+  fileSize,
+  fileType,
+  filePath,
+}: ItemPayload) {
   const id = Date.now().toString();
   const redis = await connectRedis();
-  await redis.hset(
-    "clipboard",
+  const itemData: any = {
     id,
-    JSON.stringify({ id, content: content, type: type })
-  );
+    content,
+    type,
+    ...(type === "file" && { fileName, fileSize, fileType, filePath }),
+  };
+
+  await redis.hset("clipboard", id, JSON.stringify(itemData));
   revalidatePath("/");
 
-  return {
-    id: id,
-    type: type,
-    content: content,
-  };
+  return itemData;
 }
 
 export async function updateItem(
   id: string,
   text: string,
-  type: "link" | "image" | "text"
+  type: "link" | "image" | "text" | "file",
+  fileData?: {
+    fileName?: string;
+    fileSize?: number;
+    fileType?: string;
+    filePath?: string;
+  }
 ) {
   const redis = await connectRedis();
   const todo = await redis.hget("clipboard", id);
+
   if (todo) {
-    await redis.hset(
-      "clipboard",
-      id,
-      JSON.stringify({ id, content: text, type: type })
-    );
-    revalidatePath("/");
-    const data: ClipboardItem = {
-      id: id,
-      type: type,
+    const existingData = JSON.parse(todo);
+    const updatedData = {
+      ...existingData,
       content: text,
+      type,
+      ...(type === "file" && fileData),
     };
-    return data;
+
+    await redis.hset("clipboard", id, JSON.stringify(updatedData));
+    revalidatePath("/");
+
+    return updatedData as ClipboardItem;
   }
+  return null;
 }
 
-export async function deleteItem(id: string) {
+export async function deleteItem(id: string): Promise<boolean> {
   const redis = await connectRedis();
-  await redis.hdel("clipboard", id);
-  revalidatePath("/");
+
+  try {
+    // First, get the item to check if it's a file
+    const item = await redis.hget("clipboard", id);
+
+    if (!item) {
+      console.error("Item not found in Redis");
+      return false;
+    }
+
+    const parsedItem = JSON.parse(item);
+    let fileDeleted = true;
+
+    // If it's a file or image, delete the associated file
+    if (
+      (parsedItem.type === "file" || parsedItem.type === "image") &&
+      parsedItem.content
+    ) {
+      try {
+        fileDeleted = await deleteFile(parsedItem.content);
+        if (!fileDeleted) {
+          console.warn(
+            `File ${parsedItem.content} not found or could not be deleted`
+          );
+        }
+      } catch (error) {
+        console.error("Error deleting file:", error);
+        fileDeleted = false;
+      }
+    }
+
+    // Delete from Redis
+    const deleted = await redis.hdel("clipboard", id);
+
+    if (deleted) {
+      // Revalidate the page cache
+      revalidatePath("/");
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.error("Error in deleteItem:", error);
+    throw error;
+  } finally {
+    // ioredis handles connection pooling, no need to manually disconnect
+    // unless you explicitly want to close the connection
+  }
 }
 
 export async function getItems() {

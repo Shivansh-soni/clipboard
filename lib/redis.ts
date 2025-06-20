@@ -20,19 +20,25 @@ import Redis from "ioredis";
 let redisConn: { conn: null } = { conn: null };
 
 export const connectRedis = async (): Promise<any> => {
-  if (redisConn.conn) {
-    return redisConn.conn;
-  } else {
-    try {
-      // const redis: any = new Redis();
-      const redis: any = new Redis({
-        host: process.env.REDIS_HOST!,
-        port: Number(process.env.REDIS_PORT),
-      });
-      redisConn.conn = redis;
-      return redisConn.conn as any;
-    } catch (error) {
-      console.log(error);
-    }
-  }
+  // if (redisConn.conn) {
+  //   return redisConn.conn;
+  // } else {
+  //   try {
+  //     // const redis: any = new Redis();
+  //     const redis: any = new Redis({
+  //       host: process.env.REDIS_HOST!,
+  //       port: Number(process.env.REDIS_PORT),
+  //     });
+  //     redisConn.conn = redis;
+  //     return redisConn.conn as any;
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // }
+
+  const client = new Redis(
+    "rediss://default:AaQgAAIjcDEzNDU1YmQ3MmFmOTY0N2ZiOGQxZmE5NTljNzg1ODhjNHAxMA@wanted-oryx-42016.upstash.io:6379"
+  );
+
+  return client;
 };
