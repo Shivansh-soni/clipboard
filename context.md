@@ -2,249 +2,143 @@
 
 ## Project Overview
 
-A modern clipboard application built with Next.js 14, TypeScript, and Redis. The app allows users to store and manage various types of clipboard items including text, links, images, and files with a clean, responsive interface.
+A modern clipboard application built with Next.js 14, TypeScript, and Appwrite. The app allows users to store and manage various types of clipboard items including text, links, images, and files with a clean, responsive interface and admin capabilities.
 
 ## Tech Stack
 
 - **Frontend**: Next.js 14, TypeScript, Tailwind CSS, shadcn/ui components
 - **Backend**: Next.js API Routes
-- **Database**: Redis (for storing clipboard items)
-- **Storage**: Local filesystem (for file uploads)
-- **Icons**: Lucide React (for file type icons)
+- **Database**: Appwrite (primary)
+- **State Management**: React Query (TanStack Query)
+- **Authentication**: Appwrite Auth
+- **Storage**: Appwrite Storage
+- **UI Components**: Radix UI, shadcn/ui
+- **Icons**: Lucide React
+- **Notifications**: React Hot Toast
 
 ## Project Structure
 
 ```
 /
-├── app/                    # Next.js app directory
-│   ├── api/                # API routes
-│   │   ├── files/          # File upload/download endpoints
-│   │   └── ...             # Other API endpoints
-│   └── ...                 # App routes
-├── components/             # Reusable UI components
-│   ├── app-page.tsx        # Main application page
+├── app/                    # Next.js app directory (App Router)
+│   ├── login/              # Authentication pages
+│   ├── fonts/              # Custom fonts
+│   ├── globals.css         # Global styles
+│   ├── layout.tsx          # Root layout
+│   └── page.tsx            # Home page
+│
+├── components/
+│   ├── admin/             # Admin components
+│   │   ├── AdminLayout.tsx  # Admin layout wrapper
+│   │   ├── ClipboardForm.tsx # Form for clipboard operations
+│   │   └── ClipboardList.tsx # List of clipboards
+│   ├── ui/                 # Reusable UI components (shadcn/ui)
+│   │   ├── badge.tsx
+│   │   ├── button.tsx
+│   │   ├── card.tsx
+│   │   ├── dialog.tsx
+│   │   ├── input.tsx
+│   │   ├── label.tsx
+│   │   ├── skeleton.tsx
+│   │   ├── switch.tsx
+│   │   ├── textarea.tsx
+│   │   ├── toast.tsx
+│   │   └── toaster.tsx
+│   ├── ImagePreviewModal.tsx # Image preview component
 │   ├── InputForm.tsx       # Input form component
 │   ├── RenderItems.tsx     # Component for rendering clipboard items
-│   └── ImagePreviewModal.tsx # Image preview modal component
+│   ├── Provider.tsx        # Global providers wrapper (React Query)
+│   └── icons.tsx           # Custom icon components
+│
 ├── lib/
 │   ├── actions/           # Server actions
-│   │   └── redis.actions.ts # Redis operations
+│   │   └── clipboard.actions.ts # Clipboard operations
+│   ├── appwrite.ts         # Appwrite client configuration
+│   ├── constants.ts        # Application constants
+│   ├── context/            # React context providers
+│   │   └── auth.tsx        # Authentication context
+│   ├── db/                 # Database operations
+│   │   ├── clipboardItems.ts # Clipboard item operations
+│   │   └── index.ts        # Database utilities
+│   ├── mutations/          # React Query mutations
+│   │   └── ClipboardMutation.ts
+│   ├── types/              # TypeScript type definitions
+│   │   └── database.ts     # Database schema types
 │   └── utils/              # Utility functions
-│       └── file-upload.ts  # File handling utilities
-├── public/                 # Static files
-└── uploads/                # Uploaded files storage
+│       ├── appwrite-storage.ts # File upload/download helpers
+│       ├── file-upload.ts  # File upload utilities
+│       └── index.ts        # Common utilities
+│
+├── public/               # Static files
+├── .env.local.example      # Example environment variables
+├── next.config.mjs         # Next.js configuration
+├── package.json            # Project dependencies
+├── tsconfig.json           # TypeScript configuration
+└── README.md               # Project documentation
 ```
 
-## Database Schema
+## Key Features
 
-### Clipboard Model
+- **Clipboard Management**: Store and manage text, links, images, and files
+- **Real-time Updates**: Automatic UI updates using React Query
+- **File Previews**: Image and file previews with download options
+- **Responsive Design**: Works on desktop and mobile devices
+- **Admin Interface**: Manage all clipboard items
+- **Modern UI**: Built with shadcn/ui components for a polished look
 
-```typescript
-interface Clipboard {
-  id: string; // Format: 'clipboard:uuid'
-  name: string; // User-friendly name
-  description?: string; // Optional description
-  isActive: boolean; // Whether the clipboard is active
-  createdAt: number; // Unix timestamp
-  updatedAt: number; // Unix timestamp
-  createdBy: string; // User ID of the creator
-}
-```
+## Data Model
 
-### Item Model (Updated for Multi-clipboard)
+### Clipboard Item
 
 ```typescript
 interface ClipboardItem {
   id: string;
-  type: "link" | "image" | "text" | "file";
+  type: "text" | "link" | "image" | "file";
   content: string;
-  clipboardId: string; // Reference to parent clipboard
-  // File-specific fields
-  fileName?: string;
-  fileSize?: number;
-  fileType?: string;
-  filePath?: string;
-  uploadedAt?: string;
+  file?: {
+    id: string;
+    name: string;
+    size: number;
+    type: string;
+    previewUrl?: string;
+  };
+  clipboardId: string;
+  createdAt: string;
+  updatedAt: string;
 }
 ```
 
-### Redis Keys
+## Environment Variables
 
-- `clipboard:<uuid>` - Hash containing clipboard data
-- `clipboards:index` - Set containing all clipboard IDs
-- `clipboard:items:<clipboardId>` - Sorted Set containing item IDs for a clipboard
-- `item:<id>` - Hash containing item data
+Create a `.env.local` file with the following variables:
 
-### Indexes
+```env
+# Appwrite Configuration
+NEXT_PUBLIC_APPWRITE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_APPWRITE_ENDPOINT=https://your-appwrite-endpoint/v1
+NEXT_PUBLIC_APPWRITE_DATABASE_ID=your_database_id
+NEXT_PUBLIC_APPWRITE_COLLECTION_ID=your_collection_id
+NEXT_PUBLIC_APPWRITE_BUCKET_ID=your_bucket_id
+```
 
-- All clipboards: `SMEMBERS clipboards:index`
-- Items in a clipboard: `ZRANGE clipboard:items:<clipboardId> 0 -1`
+## Deployment
 
-## Current Implementation Status
+The application is designed to be deployed on Vercel with the following requirements:
 
-### Completed
+- Node.js 18+
+- Appwrite backend
 
-1. **File Management System**
+## Development
 
-   - File upload API endpoint (`/api/files`)
-   - File serving endpoint (`/api/files/[filename]`)
-   - File type validation and MIME type detection
-   - Secure file storage with unique filenames (UUID)
-   - 10MB file size limit
-   - File type whitelist (images, documents, archives, etc.)
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Set up environment variables in `.env.local`
+4. Run the development server: `npm run dev`
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-2. **User Interface**
+## Recent Changes
 
-   - File upload input with preview
-   - File type icons for different file formats
-   - Image preview modal with zoom and download
-   - Responsive design for all screen sizes
-   - Loading states and error handling
-
-3. **Core Features**
-   - Text, link, image, and file support
-   - File metadata display (size, type)
-   - Download functionality for all file types
-   - Image preview with full-screen modal
-   - Copy to clipboard for text and links
-
-## Design Decisions
-
-1. **File Storage**
-
-   - Local filesystem with UUID filenames to prevent conflicts
-   - Files stored in `./uploads` directory (gitignored)
-   - File metadata stored in Redis
-
-2. **Security**
-
-   - Strict file type whitelist
-   - Filename sanitization
-   - MIME type validation
-   - 10MB file size limit
-
-3. **Performance**
-   - Client-side image optimization
-   - Efficient file serving with proper caching headers
-   - Lazy loading for images
-   - Optimistic UI updates
-
-## How to Run
-
-1. Install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-2. Set up environment variables (create `.env` file):
-
-   ```
-   REDIS_URL=your_redis_connection_string
-   UPLOAD_DIR=./uploads
-   ```
-
-3. Create the uploads directory:
-
-   ```bash
-   mkdir -p uploads
-   ```
-
-4. Run the development server:
-   ```bash
-   npm run dev
-   ```
-
-## Important Notes
-
-- File uploads are stored in the `uploads/` directory (not version controlled)
-- Redis is used for storing metadata and references to uploaded files
-- The application supports the following file types:
-  - Images: JPG, PNG, GIF, WEBP, SVG
-  - Documents: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT
-  - Archives: ZIP, RAR, 7Z, TAR, GZ
-  - Code: JS, TS, JSX, TSX, HTML, CSS, JSON, MD
-
-## Recent Changes (2025-06-20)
-
-### UI Improvements
-
-- Redesigned file upload interface with modern aesthetics
-- Added file type-specific icons for better visual recognition
-- Implemented a clean file preview card showing metadata
-- Enhanced visual feedback during file operations
-- Improved responsive design for all screen sizes
-
-### Functional Improvements
-
-- Added automatic file cleanup on item deletion
-- Fixed Redis client compatibility issues with ioredis
-- Enhanced error handling and user feedback
-- Improved file type detection and validation
-
-### Documentation
-
-- Updated component documentation
-- Added usage examples for file uploads
-- Improved inline code comments
-
-## Future Enhancements
-
-- Drag-and-drop file upload
-- File search functionality
-- Bulk file upload
-- File organization (folders/tags)
-- File sharing options
-- Image editing capabilities
-- Cloud storage integration (S3, Google Drive, etc.)
-- User authentication
-- **Admin Panel**
-  - Multiple clipboard management
-  - User access control
-  - Clipboard analytics
-  - Bulk operations
-  - Clipboard templates
-
-## Upcoming Features (In Development)
-
-### Admin Panel
-
-#### Overview
-
-A comprehensive admin interface to manage multiple clipboards, users, and system settings.
-
-#### Key Features
-
-- **Clipboard Management**
-
-  - Create, read, update, and delete multiple clipboards
-  - Organize clipboards with names and descriptions
-  - Toggle clipboard active/inactive status
-
-- **Item Management**
-
-  - View and manage items across all clipboards
-  - Bulk actions (delete, move, copy)
-  - Advanced search and filtering
-
-- **User Management**
-
-  - Role-based access control
-  - User permissions for clipboards
-  - Activity logging
-
-- **Analytics**
-  - Clipboard usage statistics
-  - Storage usage monitoring
-  - User activity reports
-
-#### Technical Implementation
-
-- New API routes under `/api/admin`
-- Protected admin routes with authentication
-- Redis schema updates for multi-clipboard support
-- Responsive admin dashboard
-
----
-
-_This file is automatically updated to reflect the current state of the project. Always check here first when resuming work on the project._
+- Removed Redis and its dependencies
+- Updated to use Appwrite as the primary database and storage solution
+- Simplified the architecture by removing unnecessary caching layer
+- Updated documentation to reflect current state

@@ -1,17 +1,24 @@
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { queryClient } from "@/components/Provider";
-import { ClipboardItem, ItemPayload } from "@/components/app-page";
-import { updateItem, deleteItem, addItem } from "@/lib/actions/redis.actions";
+import { ItemPayload } from "@/components/app-page";
+import { updateItem, deleteItem, addItem } from "@/lib/db/clipboardItems";
 
 export function useClipboardMutations() {
   const updateMutation = useMutation({
-    mutationFn: async ({ id, content, type }: ClipboardItem) => {
-      const item: ClipboardItem | undefined = await updateItem(
-        id,
+    mutationFn: async ({
+      id,
+      content,
+      type,
+    }: {
+      id: string;
+      content: string;
+      type: "link" | "image" | "text" | "file";
+    }) => {
+      const item = await updateItem(id, {
         content,
-        type
-      );
+        type,
+      });
       return item;
     },
     onSuccess: () => {
@@ -19,9 +26,6 @@ export function useClipboardMutations() {
       queryClient.invalidateQueries({
         queryKey: ["clipboard"],
       });
-    },
-    onError: (error) => {
-      toast.error("Failed to update text.");
     },
   });
 
@@ -44,7 +48,7 @@ export function useClipboardMutations() {
 
   const addMutation = useMutation({
     mutationFn: async (payload: ItemPayload) => {
-      const item: ClipboardItem = await addItem(payload);
+      const item = await addItem(payload);
       return item;
     },
     onSuccess: () => {
