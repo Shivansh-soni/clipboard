@@ -10,7 +10,7 @@ A modern clipboard application built with Next.js 14, TypeScript, and Appwrite. 
 - **Backend**: Next.js API Routes
 - **Database**: Appwrite (primary)
 - **State Management**: React Query (TanStack Query)
-- **Authentication**: Appwrite Auth
+- **Authentication**: Appwrite Auth with JWT
 - **Storage**: Appwrite Storage
 - **UI Components**: Radix UI, shadcn/ui
 - **Icons**: Lucide React
@@ -21,7 +21,10 @@ A modern clipboard application built with Next.js 14, TypeScript, and Appwrite. 
 ```
 /
 ├── app/                    # Next.js app directory (App Router)
+│   ├── admin/              # Admin dashboard pages
+│   │   └── users/          # User management
 │   ├── login/              # Authentication pages
+│   ├── signup/             # Invitation-based signup
 │   ├── fonts/              # Custom fonts
 │   ├── globals.css         # Global styles
 │   ├── layout.tsx          # Root layout
@@ -29,9 +32,14 @@ A modern clipboard application built with Next.js 14, TypeScript, and Appwrite. 
 │
 ├── components/
 │   ├── admin/             # Admin components
+│   │   ├── UserManagement.tsx # User management interface
 │   │   ├── AdminLayout.tsx  # Admin layout wrapper
 │   │   ├── ClipboardForm.tsx # Form for clipboard operations
 │   │   └── ClipboardList.tsx # List of clipboards
+│   ├── auth/               # Authentication components
+│   │   ├── LoginForm.tsx   # Login form
+│   │   ├── SignupForm.tsx  # Signup form (invitation-based)
+│   │   └── ProtectedRoute.tsx # Route protection
 │   ├── ui/                 # Reusable UI components (shadcn/ui)
 │   │   ├── badge.tsx
 │   │   ├── button.tsx
@@ -59,11 +67,13 @@ A modern clipboard application built with Next.js 14, TypeScript, and Appwrite. 
 │   │   └── auth.tsx        # Authentication context
 │   ├── db/                 # Database operations
 │   │   ├── clipboardItems.ts # Clipboard item operations
+│   │   ├── userFunctions.ts # User management functions
 │   │   └── index.ts        # Database utilities
 │   ├── mutations/          # React Query mutations
 │   │   └── ClipboardMutation.ts
 │   ├── types/              # TypeScript type definitions
-│   │   └── database.ts     # Database schema types
+│   │   ├── database.ts     # Database schema types
+│   │   └── users.ts        # User-related types and interfaces
 │   └── utils/              # Utility functions
 │       ├── appwrite-storage.ts # File upload/download helpers
 │       ├── file-upload.ts  # File upload utilities
@@ -79,32 +89,60 @@ A modern clipboard application built with Next.js 14, TypeScript, and Appwrite. 
 
 ## Key Features
 
+- **User Management**: Admin can create, update, and delete users
+- **Role-Based Access Control**: Admin and User roles with appropriate permissions
+- **Invitation System**: Secure user onboarding with invitation tokens
 - **Clipboard Management**: Store and manage text, links, images, and files
 - **Real-time Updates**: Automatic UI updates using React Query
 - **File Previews**: Image and file previews with download options
 - **Responsive Design**: Works on desktop and mobile devices
-- **Admin Interface**: Manage all clipboard items
+- **Admin Interface**: Manage all users and clipboard items
 - **Modern UI**: Built with shadcn/ui components for a polished look
+
+## Authentication & Authorization
+
+- **User Roles**:
+
+  - `admin`: Full access to all features including user management
+  - `user`: Can manage their own clipboard items
+
+- **Authentication Flows**:
+  - Email/Password login
+  - Invitation-based signup
+  - Password reset
+  - Protected routes with role-based access control
 
 ## Data Model
 
-### Clipboard Item
+### User
 
 ```typescript
-interface ClipboardItem {
-  id: string;
-  type: "text" | "link" | "image" | "file";
-  content: string;
-  file?: {
-    id: string;
-    name: string;
-    size: number;
-    type: string;
-    previewUrl?: string;
+interface User {
+  $id: string;
+  email: string;
+  name: string;
+  status: "active" | "pending" | "suspended";
+  prefs: {
+    role: "admin" | "user";
   };
-  clipboardId: string;
-  createdAt: string;
-  updatedAt: string;
+  $createdAt: string;
+  $updatedAt: string;
+}
+```
+
+### Invitation
+
+```typescript
+interface Invitation {
+  $id: string;
+  email: string;
+  token: string;
+  role: UserRole;
+  status: "pending" | "accepted" | "revoked";
+  invitedBy: string;
+  expiresAt: string;
+  acceptedAt?: string;
+  userId?: string;
 }
 ```
 
@@ -132,13 +170,16 @@ The application is designed to be deployed on Vercel with the following requirem
 
 1. Clone the repository
 2. Install dependencies: `npm install`
-3. Set up environment variables in `.env.local`
-4. Run the development server: `npm run dev`
+3. Copy `.env.local.example` to `.env.local` and update with your Appwrite credentials
+4. Start the development server: `npm run dev`
 5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ## Recent Changes
 
-- Removed Redis and its dependencies
-- Updated to use Appwrite as the primary database and storage solution
-- Simplified the architecture by removing unnecessary caching layer
-- Updated documentation to reflect current state
+- **2024-06-21**:
+  - Implemented complete user management interface
+  - Added role-based access control
+  - Implemented invitation system
+  - Fixed authentication flows
+  - Added proper error handling and loading states
+  - Updated documentation
