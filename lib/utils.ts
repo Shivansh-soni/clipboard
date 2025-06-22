@@ -29,3 +29,20 @@ export const openImageInNewTab = (item: ClipboardItem) => {
   );
   newTab.document.close();
 };
+
+export async function downloadWithCustomName(
+  url: string,
+  customFilename: string
+) {
+  const response = await fetch(url);
+  const blob = await response.blob();
+  const blobUrl = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = blobUrl;
+  a.download = customFilename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(blobUrl); // clean up
+}

@@ -1,35 +1,41 @@
 "use client";
-import { useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  addItem,
-  deleteItem,
-  getItems,
-  updateItem,
-} from "@/lib/actions/redis.actions";
+import { getItems } from "@/lib/db/clipboardItems";
+import { useClipboardMutations } from "@/lib/mutations/ClipboardMutation";
 import { generatePayload } from "@/lib/utils";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { uploadFile } from "@/lib/utils/appwrite-storage";
+import { useQuery } from "@tanstack/react-query";
+import { useRef, useState } from "react";
 import toast from "react-hot-toast";
 import InputForm from "./InputForm";
 import { queryClient } from "./Provider";
 import RenderItems from "./RenderItems";
-import { useClipboardMutations } from "@/lib/mutations/ClipboardMutation";
+
+interface FileMetadata {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  previewUrl?: string;
+}
+
 export interface ClipboardItem {
   id: string;
-  type: "link" | "image" | "text";
+  type: "link" | "image" | "text" | "file";
   content: string;
+  file?: FileMetadata;
+  clipboardId?: string;
 }
-export type ItemPayload = {
-  content: string;
-  type: "link" | "image" | "text";
-};
+
+export type ItemPayload = Omit<ClipboardItem, "id">;
 
 export default function Home() {
   const [newItem, setNewItem] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
-  const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const {
     data: items,
@@ -38,20 +44,101 @@ export default function Home() {
   } = useQuery({
     queryKey: ["clipboard"],
     queryFn: async () => {
-      const fetchedItems = await getItems();
-      return fetchedItems;
+      const items = await getItems();
+      return items.map((doc: any) => ({
+        id: doc.$id,
+        type: doc.type,
+        content: doc.content,
+        file: doc.file
+          ? {
+              id: doc.file.id,
+              name: doc.file.name,
+              size: doc.file.size,
+              type: doc.file.type,
+              previewUrl: doc.file.previewUrl,
+            }
+          : undefined,
+        clipboardId: doc.clipboardId,
+      }));
     },
   });
 
   const { addMutation, updateMutation, deleteMutation } =
     useClipboardMutations();
 
-  const handleAddItem = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newItem.trim() && newItem !== "") {
-      addMutation.mutate(generatePayload(newItem));
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Basic validation (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File size should be less than 10MB");
+      return;
+    }
+
+    setSelectedFile(file);
+  };
+
+  const clearFile = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
+
+  const handleAddItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newItem.trim() && !selectedFile) return;
+
+    setIsUploading(true);
+
+    try {
+      if (selectedFile) {
+        // Create a file-like object
+        const fileObj = {
+          name: selectedFile.name,
+          type: selectedFile.type,
+          size: selectedFile.size,
+
+          arrayBuffer: () => selectedFile.arrayBuffer(),
+        };
+
+        // Upload file to Appwrite Storage
+        const result = await uploadFile(fileObj);
+
+        // Add file reference to the database
+        addMutation.mutate({
+          type: selectedFile.type.startsWith("image/") ? "image" : "file",
+          content: result.url, // Store the public URL
+          file: {
+            id: result.id,
+            name: result.name,
+            size: result.size,
+            type: result.type,
+            previewUrl: result.previewUrl,
+          },
+          clipboardId: "clipboardId",
+        });
+
+        toast.success("File uploaded successfully!");
+        clearFile();
+      } else if (newItem.trim()) {
+        // Handle regular text/link
+        addMutation.mutate(generatePayload(newItem));
+      }
+
+      setNewItem("");
+      queryClient.invalidateQueries({ queryKey: ["clipboard"] });
+    } catch (error) {
+      console.error("Error adding item:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to add item"
+      );
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleUpdateItem = async (id: string) => {
     const payload = generatePayload(editContent);
     if (editContent.trim() && items) {
@@ -60,27 +147,13 @@ export default function Home() {
         ...payload,
       });
     }
-  };
-  const handleDeleteItem = async (id: string) => {
-    deleteMutation.mutate(id);
+    queryClient.invalidateQueries({ queryKey: ["clipboard"] });
+    setEditingId(null);
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64String = reader.result as string;
-        const item = await addItem({
-          type: "image",
-          content: base64String,
-        });
-        // setItems([...items, item]);
-        toast.success("Image has been added successfully.");
-      };
-      reader.readAsDataURL(file);
-    }
-    setIsImagePickerOpen(false);
+  const handleDeleteItem = (id: string) => {
+    deleteMutation.mutate(id);
+    queryClient.invalidateQueries({ queryKey: ["clipboard"] });
   };
 
   return (
@@ -88,26 +161,33 @@ export default function Home() {
       <div className='container mx-auto p-4 max-w-3xl'>
         <Card className='bg-gray-800 border-gray-700'>
           <CardHeader>
-            <CardTitle className='text-3xl font-bold text-center text-white'>
-              Clipboard App
+            <CardTitle className='text-2xl font-bold text-center'>
+              Clipboard
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className='flex flex-col gap-4'>
             <InputForm
+              handleAddItem={handleAddItem}
               newItem={newItem}
               setNewItem={setNewItem}
               fileInputRef={fileInputRef}
-              handleAddItem={handleAddItem}
-              handleImageUpload={handleImageUpload}
+              handleFileUpload={handleFileUpload}
+              selectedFile={selectedFile}
+              clearFile={clearFile}
             />
+            {isUploading && (
+              <div className='text-center text-sm text-gray-400 mt-2'>
+                Uploading...
+              </div>
+            )}
             <RenderItems
-              editingId={editingId}
-              setEditingId={setEditingId}
-              editContent={editContent}
-              setEditContent={setEditContent}
-              items={items}
+              items={items || []}
               isLoading={isLoading}
               error={error}
+              editingId={editingId}
+              editContent={editContent}
+              setEditContent={setEditContent}
+              setEditingId={setEditingId}
               handleUpdateItem={handleUpdateItem}
               handleDeleteItem={handleDeleteItem}
             />

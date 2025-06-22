@@ -3,7 +3,9 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import Provider from "@/components/Provider";
-// import { Toaster } from "@/components/ui/toaster";
+import { AuthProvider } from "@/lib/context/auth";
+import { Navbar } from "@/components/Navbar";
+
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -28,19 +30,22 @@ export default function RootLayout({
   return (
     <html lang='en'>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased dark`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased dark min-h-screen flex flex-col`}
       >
-        <Provider>{children}</Provider>
+        <AuthProvider>
+          <Provider>
+            <Navbar />
+            <main className='flex-1'>{children}</main>
+          </Provider>
+        </AuthProvider>
         <Toaster
           toastOptions={{
-            // Define default options
             className: "",
             duration: 5000,
             style: {
               background: "#0f0f0f",
               color: "#fff",
             },
-
             success: {
               duration: 3000,
               //@ts-ignore
