@@ -34,7 +34,7 @@ type RenderItemsProps = {
   editContent: string;
   setEditContent: (content: string) => void;
   handleUpdateItem: (id: string) => void;
-  handleDeleteItem: (id: string) => void;
+  handleDeleteItem: (id: string, file_id: string) => void;
 };
 
 // Helper function to get file icon based on file type
@@ -251,7 +251,9 @@ export default function RenderItems(props: RenderItemsProps) {
                     <Button
                       size='icon'
                       variant='outline'
-                      onClick={() => props.handleDeleteItem(item.id)}
+                      onClick={() =>
+                        props.handleDeleteItem(item.id, item.file?.id || "")
+                      }
                       className='border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-400'
                     >
                       <Trash className='h-4 w-4' />
