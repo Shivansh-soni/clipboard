@@ -1,6 +1,7 @@
 import { ItemPayload } from "@/components/app-page";
 import { databases } from "@/lib/appwrite";
 import { ID } from "appwrite";
+import { storage } from "@/lib/appwrite";
 const DATABASE_ID = "clipboard_db";
 const CLIPBOARD_ITEMS_COLLECTION = "clipboard_items";
 
@@ -27,6 +28,7 @@ export const updateItem = async (id: string, payload: ItemPayload) => {
 };
 
 export const deleteItem = async (id: string) => {
+  await storage.deleteFile("clipboard_files", id);
   await databases.deleteDocument(DATABASE_ID, CLIPBOARD_ITEMS_COLLECTION, id);
 };
 
