@@ -27,8 +27,10 @@ export const updateItem = async (id: string, payload: ItemPayload) => {
   return item;
 };
 
-export const deleteItem = async (id: string) => {
-  await storage.deleteFile("clipboard_files", id);
+export const deleteItem = async (id: string, file_id: string) => {
+  if (file_id) {
+    await storage.deleteFile("clipboard_files", file_id);
+  }
   await databases.deleteDocument(DATABASE_ID, CLIPBOARD_ITEMS_COLLECTION, id);
 };
 

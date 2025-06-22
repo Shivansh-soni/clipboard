@@ -151,8 +151,8 @@ export default function Home() {
     setEditingId(null);
   };
 
-  const handleDeleteItem = (id: string) => {
-    deleteMutation.mutate(id);
+  const handleDeleteItem = (id: string, file_id: string) => {
+    deleteMutation.mutate({ id, file_id });
     queryClient.invalidateQueries({ queryKey: ["clipboard"] });
   };
 

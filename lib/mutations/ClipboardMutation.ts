@@ -30,8 +30,8 @@ export function useClipboardMutations() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await deleteItem(id);
+    mutationFn: async ({ id, file_id }: { id: string; file_id: string }) => {
+      await deleteItem(id, file_id);
       return true;
     },
     onSuccess: () => {
