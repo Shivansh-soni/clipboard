@@ -15,10 +15,11 @@ A modern clipboard application built with Next.js 14, TypeScript, and Appwrite. 
 - **UI Components**: Radix UI, shadcn/ui
 - **Icons**: Lucide React
 - **Notifications**: React Hot Toast
+- **Form Handling**: React Hook Form with Zod validation
 
 ## Project Structure
 
-```
+````
 /
 ├── app/                    # Next.js app directory (App Router)
 │   ├── admin/              # Admin dashboard pages
@@ -85,7 +86,6 @@ A modern clipboard application built with Next.js 14, TypeScript, and Appwrite. 
 ├── package.json            # Project dependencies
 ├── tsconfig.json           # TypeScript configuration
 └── README.md               # Project documentation
-```
 
 ## Key Features
 
@@ -99,18 +99,68 @@ A modern clipboard application built with Next.js 14, TypeScript, and Appwrite. 
 - **Admin Interface**: Manage all users and clipboard items
 - **Modern UI**: Built with shadcn/ui components for a polished look
 
-## Authentication & Authorization
+## Admin Dashboard
 
-- **User Roles**:
+The admin dashboard provides a comprehensive interface for managing users and monitoring system activity.
 
-  - `admin`: Full access to all features including user management
-  - `user`: Can manage their own clipboard items
+### Key Components
 
-- **Authentication Flows**:
-  - Email/Password login
-  - Invitation-based signup
-  - Password reset
-  - Protected routes with role-based access control
+1. **AdminLayout**
+
+   - Responsive sidebar navigation
+   - Dark mode support
+   - Protected routes
+   - Session management
+
+2. **Dashboard**
+
+   - System statistics overview
+   - Recent activity feed
+   - Quick actions
+
+3. **User Management**
+   - User listing with search and filters
+   - User creation form with validation
+   - Role management (Admin/User)
+   - User status management (Active/Inactive)
+
+### Theming
+
+- Built with shadcn/ui components for consistent styling
+- Dark mode support using CSS variables
+- Responsive design for all screen sizes
+- Accessible UI components with proper contrast
+- Loading states and error handling
+
+### Styling Approach
+
+- Uses Tailwind CSS for utility-first styling
+- Custom theme variables in `globals.css`
+- Consistent spacing and typography scales
+- Reusable UI components from shadcn/ui
+- Responsive breakpoints for mobile and desktop
+
+## Clipboard Access Model
+
+The application uses a simple PIN-based access system:
+
+1. **Clipboard Creation**
+   - Only admin can create new clipboards
+   - Each clipboard has a unique PIN
+   - Admin can set optional expiration dates
+   - Admin can view all created clipboards
+
+2. **User Access**
+   - Users access clipboards by entering the PIN
+   - PIN is stored in localStorage for convenience
+   - No user accounts or passwords required
+   - Multiple devices can access the same clipboard with the same PIN
+
+3. **Security**
+   - PINs should be sufficiently complex
+   - Option to require PIN on each visit (configurable)
+   - Admin can revoke/regenerate PINs
+   - Clipboard content is encrypted at rest
 
 ## Data Model
 
@@ -128,7 +178,7 @@ interface User {
   $createdAt: string;
   $updatedAt: string;
 }
-```
+````
 
 ### Invitation
 
@@ -143,6 +193,35 @@ interface Invitation {
   expiresAt: string;
   acceptedAt?: string;
   userId?: string;
+}
+```
+
+### Clipboard
+
+```typescript
+interface Clipboard {
+  id: string;
+  pin: string; // Hashed in database
+  name: string;
+  createdBy: string; // Admin ID
+  createdAt: Date;
+  expiresAt?: Date;
+  requirePinOnVisit: boolean;
+  lastAccessed: Date;
+}
+```
+
+### Clipboard Item
+
+```typescript
+interface ClipboardItem {
+  id: string;
+  clipboardId: string;
+  content: string;
+  type: "text" | "image" | "file" | "rich-text";
+  metadata: Record<string, any>;
+  createdAt: Date;
+  createdBy?: string; // Optional: if you want to track who added the item
 }
 ```
 
@@ -176,10 +255,15 @@ The application is designed to be deployed on Vercel with the following requirem
 
 ## Recent Changes
 
+- **2024-06-23**:
+  - Implemented admin dashboard theming and UI improvements
+  - Added responsive layout and dark mode support
+  - Improved form validation and user feedback
+  - Enhanced navigation and accessibility
+  - Updated documentation
 - **2024-06-21**:
   - Implemented complete user management interface
   - Added role-based access control
   - Implemented invitation system
   - Fixed authentication flows
   - Added proper error handling and loading states
-  - Updated documentation

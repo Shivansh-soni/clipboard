@@ -130,18 +130,6 @@ export interface ChangePasswordRequest {
   newPasswordAgain: string;
 }
 
-// User preferences
-export interface UserPreferences {
-  theme?: "light" | "dark" | "system";
-  language?: string;
-  notifications?: {
-    email?: boolean;
-    push?: boolean;
-    clipboardUpdates?: boolean;
-  };
-  // Add more preferences as needed
-}
-
 // User statistics
 export interface UserStats {
   totalItems: number;
