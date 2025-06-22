@@ -1,7 +1,6 @@
 "use client";
-
-import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,12 +17,12 @@ import { login } from "@/lib/appwrite";
 
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  // const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const redirectTo = searchParams.get("redirect") || "/";
+  const redirectTo = "/";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
