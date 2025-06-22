@@ -99,6 +99,7 @@ export default function Home() {
           name: selectedFile.name,
           type: selectedFile.type,
           size: selectedFile.size,
+
           arrayBuffer: () => selectedFile.arrayBuffer(),
         };
 

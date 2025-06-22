@@ -19,7 +19,7 @@ export function Navbar() {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
 
-  if (pathname === "/login" || pathname === "/signup") {
+  if (pathname === "/login" || pathname === "/signup" || pathname === "/") {
     return null;
   }
 
