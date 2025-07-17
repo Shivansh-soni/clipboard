@@ -99,16 +99,18 @@ export function ClipboardFormDialog({
         <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
           <Input placeholder='Name' {...form.register("name")} />
           <Input placeholder='PIN' type='password' {...form.register("pin")} />
-          <Input
+          {/* <Input
             placeholder='Expires At'
             type='datetime-local'
             {...form.register("expiresAt")}
-          />
-          <Label>Require PIN on every visit</Label>
-          <Switch
-            checked={form.watch("requirePinOnVisit")}
-            onCheckedChange={(v) => form.setValue("requirePinOnVisit", v)}
-          />
+          /> */}
+          <div className='flex items-center justify-between'>
+            <Label>Require PIN on every visit</Label>
+            <Switch
+              checked={form.watch("requirePinOnVisit")}
+              onCheckedChange={(v) => form.setValue("requirePinOnVisit", v)}
+            />
+          </div>
           <Button type='submit' disabled={form.formState.isSubmitting}>
             Save
           </Button>

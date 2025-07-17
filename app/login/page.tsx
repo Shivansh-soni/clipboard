@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Icons } from "@/components/icons";
 import { login } from "@/lib/appwrite";
+import { account } from "@/lib/appwrite";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -41,6 +42,16 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const user = await account.get();
+      if (user) {
+        router.push(redirectTo);
+      }
+    };
+    checkAuth();
+  }, []);
 
   return (
     <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/20 p-4'>

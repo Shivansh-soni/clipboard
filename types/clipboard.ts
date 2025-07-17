@@ -6,11 +6,22 @@ export interface FileMetadata {
   previewUrl?: string;
 }
 
+export interface BaseClipboard {
+  $id: string;
+  name: string;
+  description?: string;
+  userId: string;
+  isActive: boolean;
+  requirePinOnVisit: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ClipboardItem {
   id: string;
   type: "link" | "image" | "text" | "file";
   content: string;
-  file?: string; // Allow both string and FileMetadata
+  file?: string | FileMetadata;
   clipboardId?: string;
   createdAt?: string;
 }

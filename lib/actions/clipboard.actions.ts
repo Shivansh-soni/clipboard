@@ -3,19 +3,16 @@ import { ID, Query, type Models, Storage } from "appwrite";
 import { databases, storage } from "@/lib/appwrite";
 import { hashPin, verifyPin } from "@/lib/security";
 import { listClipboards } from "../db";
+import { BaseClipboard } from "@/types/clipboard";
 
 const STORAGE_BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID;
 
 const DATABASE_ID = "clipboard_db";
 const COLLECTION_ID = "clipboards";
 
-export interface Clipboard extends Models.Document {
-  name: string;
-  description: string;
-  userId: string;
+export interface Clipboard extends BaseClipboard, Models.Document {
   tags: string[];
   isPublic: boolean;
-  isActive: boolean;
   pin: string;
   lastAccessed: string;
 }
@@ -64,14 +61,24 @@ export async function createClipboard(
   );
 }
 
-export async function getClipboardByName(name: string): Promise<Clipboard> {
+export async function getClipboardByName(name: string): Promise<BaseClipboard> {
   const res = await databases.listDocuments(DATABASE_ID, "clipboards", [
     Query.equal("name", name),
   ]);
   if (!res.documents.length) {
     throw new Error("Clipboard not found");
   }
-  return res.documents[0] as unknown as Clipboard;
+  const doc = res.documents[0];
+  return {
+    $id: doc.$id,
+    name: doc.name,
+    description: doc.description || '',
+    userId: doc.userId,
+    isActive: doc.isActive,
+    requirePinOnVisit: doc.requirePinOnVisit,
+    createdAt: doc.$createdAt,
+    updatedAt: doc.$updatedAt,
+  } as BaseClipboard;
 }
 
 export async function getClipboardsByUser(
@@ -123,7 +130,8 @@ export async function verifyClipboardPin(
   pin: string
 ): Promise<boolean> {
   try {
-    const clipboard = await getClipboardByName(clipboardId);
+    const clipboard = await databases.getDocument(DATABASE_ID, COLLECTION_ID, clipboardId) as unknown as Clipboard;
+    if (!clipboard) return false;
     return verifyPin(pin, clipboard.pin);
   } catch (error) {
     console.error("Error verifying pin:", error);

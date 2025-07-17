@@ -4,8 +4,13 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/context/auth";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { LogOut, Users, UserPlus, LayoutDashboard } from "lucide-react";
+import {
+  LogOut,
+  Users,
+  UserPlus,
+  LayoutDashboard,
+  ClipboardList,
+} from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 interface NavItem {
@@ -37,6 +42,12 @@ export default function AdminLayout({
       href: "/admin",
       icon: LayoutDashboard,
       active: pathname === "/admin",
+    },
+    {
+      name: "Clipboards",
+      href: "/admin/clipboards",
+      icon: LayoutDashboard,
+      active: pathname === "/admin/clipboards",
     },
     {
       name: "Users",
