@@ -21,7 +21,7 @@ export interface ClipboardItem {
   id: string;
   type: "link" | "image" | "text" | "file";
   content: string;
-  file?: string | FileMetadata;
+  file?: string;
   clipboardId?: string;
   createdAt?: string;
 }
