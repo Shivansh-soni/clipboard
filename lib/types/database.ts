@@ -1,13 +1,25 @@
+// export type Clipboard = {
+//   $id: string;
+//   $createdAt: string;
+//   $updatedAt: string;
+//   $permissions: string[];
+//   name: string;
+//   description?: string;
+//   userId: string;
+//   isPublic: boolean;
+//   tags?: string[];
+// };
+
 export type Clipboard = {
   $id: string;
-  $createdAt: string;
-  $updatedAt: string;
-  $permissions: string[];
   name: string;
-  description?: string;
-  userId: string;
-  isPublic: boolean;
-  tags?: string[];
+  pin: string; // hashed
+  createdBy: string; // admin $id
+  createdAt: string;
+  expiresAt?: string;
+  requirePinOnVisit: boolean;
+  lastAccessed: string;
+  isActive: boolean; // soft-delete flag
 };
 
 export type ClipboardItemType = "text" | "image" | "file" | "link";

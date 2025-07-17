@@ -62,6 +62,9 @@ export default function AdminLayout({
 
   return (
     <div className='min-h-screen bg-background text-foreground flex'>
+      {/* <SidebarLink href='/admin/clipboards' icon={ClipboardIcon}>
+        Clipboards
+      </SidebarLink> */}
       {/* Sidebar */}
       <div className='w-64 border-r bg-card'>
         <div className='p-4 border-b'>

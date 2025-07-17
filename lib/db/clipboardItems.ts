@@ -1,4 +1,4 @@
-import { ItemPayload } from "@/components/app-page";
+import { ItemPayload } from "@/types/clipboard";
 import { databases } from "@/lib/appwrite";
 import { ID } from "appwrite";
 import { storage } from "@/lib/appwrite";
@@ -10,7 +10,7 @@ export const updateItem = async (id: string, payload: ItemPayload) => {
   const updateData = {
     ...rest,
     file: file ? JSON.stringify(file) : undefined,
-    previewUrl: file?.previewUrl, // Keep previewUrl at root for backward compatibility
+    previewUrl: file || "", // Keep previewUrl at root for backward compatibility
   };
 
   const item = await databases.updateDocument(
@@ -39,7 +39,7 @@ export const addItem = async (payload: ItemPayload) => {
   const createData = {
     ...rest,
     file: file ? JSON.stringify(file) : undefined,
-    previewUrl: file?.previewUrl, // Keep previewUrl at root for backward compatibility
+    previewUrl: file || "", // Keep previewUrl at root for backward compatibility
   };
 
   const item = await databases.createDocument(

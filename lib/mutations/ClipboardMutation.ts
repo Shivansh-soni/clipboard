@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { queryClient } from "@/components/Provider";
-import { ItemPayload } from "@/components/app-page";
+import { ItemPayload } from "@/types/clipboard";
 import { updateItem, deleteItem, addItem } from "@/lib/db/clipboardItems";
 
 export function useClipboardMutations() {
