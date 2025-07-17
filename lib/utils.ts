@@ -1,7 +1,8 @@
-import { ClipboardItem, ItemPayload } from "@/components/app-page";
+import { ItemPayload } from "@/types/clipboard";
 import { clsx, type ClassValue } from "clsx";
 import toast from "react-hot-toast";
 import { twMerge } from "tailwind-merge";
+import { getFilePreviewUrl } from "./utils/appwrite-storage";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -22,10 +23,12 @@ export const handleCopy = (content: string) => {
   toast.success("The content has been copied to your clipboard.");
 };
 
-export const openImageInNewTab = (item: ClipboardItem) => {
+export const openImageInNewTab = (item: ItemPayload) => {
   const newTab: any = window.open();
   newTab.document.write(
-    `<html><head><title>Image Preview</title></head><body style="margin:0; background-color:black; display:flex; align-items:center; justify-content:center;"><img src="${item.content}" alt="Uploaded image" style="max-width:100%; height:auto;" /></body></html>`
+    `<html><head><title>Image Preview</title></head><body style="margin:0; background-color:black; display:flex; align-items:center; justify-content:center;"><img src="${getFilePreviewUrl(
+      item.file || ""
+    )}" alt="Uploaded image" style="max-width:100%; height:auto;" /></body></html>`
   );
   newTab.document.close();
 };

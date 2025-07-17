@@ -166,11 +166,11 @@ export const getFileDownloadUrl = (
  */
 export const getFilePreviewUrl = (
   fileId: string,
-  width: number = 500,
-  height: number = 500,
+  // width: number = 500,
+  // height: number = 500,
   bucketId: string = BUCKET_ID
 ) => {
-  return storage.getFilePreview(bucketId, fileId, width, height);
+  return storage.getFilePreview(bucketId, fileId);
 };
 
 /**

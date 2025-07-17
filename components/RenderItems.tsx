@@ -80,22 +80,19 @@ export default function RenderItems(props: RenderItemsProps) {
   };
 
   const handleImageClick = (item: ClipboardItem) => {
-    if (
-      item.type === "image" ||
-      (item.type === "file" && item.file?.type?.startsWith("image/"))
-    ) {
+    if (item.type === "image" || (item.type === "file" && item.file)) {
       setPreviewImage({
-        url: renderImageUrl(item.file?.id || ""),
-        alt: item.file?.name || "Preview",
+        url: renderImageUrl(item.file || ""),
+        alt: item.file || "Preview",
       });
     }
   };
 
   const handleDownload = async (item: ClipboardItem) => {
-    if (!item.file?.id) return;
-    const file = storage.getFileDownload("clipboard_files", item.file.id);
+    if (!item.file) return;
+    const file = storage.getFileDownload("clipboard_files", item.file);
     if (!file) return;
-    await downloadWithCustomName(file, item.file.name);
+    await downloadWithCustomName(file, item.file);
   };
 
   return (
@@ -138,7 +135,7 @@ export default function RenderItems(props: RenderItemsProps) {
                   >
                     <div className='flex items-center gap-2'>
                       <Image
-                        src={renderImageUrl(item.file?.id || "")}
+                        src={renderImageUrl(item.file || "")}
                         width={100}
                         height={100}
                         alt='Uploaded content'
@@ -146,11 +143,10 @@ export default function RenderItems(props: RenderItemsProps) {
                       />
                       <div className='flex flex-col'>
                         <p className='font-medium text-sm truncate'>
-                          {item.file?.name}
+                          {item.file}
                         </p>
                         <p className='text-xs text-gray-400'>
-                          {formatFileSize(item.file?.size || 0)} •{" "}
-                          {item.file?.type}
+                          {formatFileSize(item.file as any)} • {item.file}
                         </p>
                       </div>
                     </div>
@@ -162,11 +158,7 @@ export default function RenderItems(props: RenderItemsProps) {
                         e.stopPropagation();
                         handleDownload(item);
                       }}
-                      title={
-                        item.file?.type?.startsWith("image/")
-                          ? "Preview"
-                          : "Download"
-                      }
+                      title='Download'
                     >
                       <Download className='w-20 h-20' />
                     </Button>
@@ -174,14 +166,14 @@ export default function RenderItems(props: RenderItemsProps) {
                 ) : item.type === "file" && item.file ? (
                   <div className='flex items-center gap-3 p-3 bg-gray-800 rounded-lg cursor-pointer'>
                     <div className='p-2 bg-gray-700 rounded'>
-                      {getFileIcon(item.file.name)}
+                      {getFileIcon(item.file)}
                     </div>
                     <div className='flex-1 min-w-0'>
                       <p className='font-medium text-sm truncate'>
-                        {item.file.name}
+                        {item.file}
                       </p>
                       <p className='text-xs text-gray-400'>
-                        {formatFileSize(item.file.size)} • {item.file.type}
+                        {formatFileSize(item.file as any)} • {item.file}
                       </p>
                     </div>
                     <Button
@@ -189,17 +181,9 @@ export default function RenderItems(props: RenderItemsProps) {
                       size='icon'
                       className='text-gray-400 hover:text-white hover:bg-gray-700'
                       onClick={() => handleDownload(item)}
-                      title={
-                        item.file?.type?.startsWith("image/")
-                          ? "Preview"
-                          : "Download"
-                      }
+                      title='Download'
                     >
-                      {item.file?.type?.startsWith("image/") ? (
-                        <FileImage size={20} className='h-4 w-4' />
-                      ) : (
-                        <Download size={20} className='h-4 w-4' />
-                      )}
+                      <Download size={20} className='h-4 w-4' />
                     </Button>
                   </div>
                 ) : null}
@@ -252,7 +236,7 @@ export default function RenderItems(props: RenderItemsProps) {
                       size='icon'
                       variant='outline'
                       onClick={() =>
-                        props.handleDeleteItem(item.id, item.file?.id || "")
+                        props.handleDeleteItem(item.id, item.file!)
                       }
                       className='border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-400'
                     >

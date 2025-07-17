@@ -18,10 +18,15 @@ import { LogOut, User, Settings, Home, Clipboard } from "lucide-react";
 export function Navbar() {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
-
-  if (pathname === "/login" || pathname === "/signup" || pathname === "/") {
-    return null;
-  }
+console.log(pathname);
+if (
+  pathname === "/login" ||
+  pathname === "/signup" ||
+  pathname === "/" ||
+  pathname.includes("/clipboard")
+) {
+  return null;
+}
 
   return (
     <header className='border-b w-full'>

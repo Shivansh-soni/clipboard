@@ -4,8 +4,13 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/context/auth";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { LogOut, Users, UserPlus, LayoutDashboard } from "lucide-react";
+import {
+  LogOut,
+  Users,
+  UserPlus,
+  LayoutDashboard,
+  ClipboardList,
+} from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 interface NavItem {
@@ -39,6 +44,12 @@ export default function AdminLayout({
       active: pathname === "/admin",
     },
     {
+      name: "Clipboards",
+      href: "/admin/clipboards",
+      icon: LayoutDashboard,
+      active: pathname === "/admin/clipboards",
+    },
+    {
       name: "Users",
       href: "/admin/users",
       icon: Users,
@@ -62,6 +73,9 @@ export default function AdminLayout({
 
   return (
     <div className='min-h-screen bg-background text-foreground flex'>
+      {/* <SidebarLink href='/admin/clipboards' icon={ClipboardIcon}>
+        Clipboards
+      </SidebarLink> */}
       {/* Sidebar */}
       <div className='w-64 border-r bg-card'>
         <div className='p-4 border-b'>
