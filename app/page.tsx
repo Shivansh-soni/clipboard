@@ -25,7 +25,9 @@ import { useTheme } from "next-themes";
 
 const App = () => {
   const [darkMode, setDarkMode] = useState(
-    document.body.classList.contains("dark") ?? false
+    typeof window !== "undefined"
+      ? document.body.classList.contains("dark")
+      : false
   );
   const [activeTab, setActiveTab] = useState("text");
   const [clipboardItems, setClipboardItems] = useState([
@@ -70,13 +72,14 @@ const App = () => {
   const nextTheme = useTheme();
 
   useEffect(() => {
-    console.log("darkMode", darkMode);
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-      nextTheme.setTheme("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      nextTheme.setTheme("light");
+    if (typeof window !== "undefined") {
+      if (darkMode) {
+        document.documentElement.classList.add("dark");
+        nextTheme.setTheme("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+        nextTheme.setTheme("light");
+      }
     }
   }, [darkMode]);
 
