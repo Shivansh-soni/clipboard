@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useAuth } from "@/lib/context/auth";
+
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import {
@@ -12,6 +12,7 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "../AuthProvider";
 
 interface NavItem {
   name: string;
@@ -25,7 +26,7 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signOut, isAuthenticated } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 

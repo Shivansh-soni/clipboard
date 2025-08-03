@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { PasswordForm } from "@/components/profile/PasswordForm";
 // import { AccountSettingsForm } from "@/components/profile/AccountSettingsForm";
-import { useAuth } from "@/lib/context/auth";
+import { useAuth } from "@/components/AuthProvider";
 
 export const dynamic = "force-dynamic";
 

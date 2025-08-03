@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import cookie from "js-cookie";
 import {
   Card,
   CardContent,
@@ -13,17 +14,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Icons } from "@/components/icons";
+import axios from "axios";
 import { login } from "@/lib/appwrite";
 import { account } from "@/lib/appwrite";
 
-export default function LoginPage() {
+const LoginPage = () => {
   const router = useRouter();
   // const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const redirectTo = "/";
+  const redirectTo = "/admin";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +33,11 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      await login(email, password);
+      // await login(email, password);
+      const res = await axios.post("/api/auth/login", { email, password });
+      const user = res.data.user;
+      // cookie.set("user", JSON.stringify(user));
+      cookie.set("token", res.data.token);
       router.push(redirectTo);
     } catch (error: any) {
       console.error("Login failed:", error);
@@ -143,4 +149,6 @@ export default function LoginPage() {
       </Card>
     </div>
   );
-}
+};
+
+export default LoginPage;
