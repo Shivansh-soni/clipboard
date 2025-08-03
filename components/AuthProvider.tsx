@@ -2,7 +2,7 @@
 import { createContext, useContext } from "react";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import cookie from "js-cookie";
 interface User {
   id: string;
@@ -26,6 +26,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const token = cookie.get("token");
+  const pathname = usePathname();
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -44,7 +45,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       } catch (error) {
         console.log("Auth check failed:", error);
-        router.push("/auth/login");
+        if (
+          !pathname.includes("api") ||
+          !pathname.includes("auth") ||
+          !pathname.includes("clipboard")
+        ) {
+          router.push("/auth/login");
+        }
         // setError(error);
       } finally {
         setLoading(false);
