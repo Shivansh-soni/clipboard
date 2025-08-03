@@ -27,6 +27,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const token = cookie.get("token");
   const pathname = usePathname();
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -39,17 +40,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           },
         });
         const user = { ...res.data.user, password: "" };
-
+        console.log("User:", user);
         if (user) {
           setUser(user);
         }
       } catch (error) {
+        const splitPathname = pathname.split("/");
         console.log("Auth check failed:", error);
-        if (
-          !pathname.includes("api") ||
-          !pathname.includes("auth") ||
-          !pathname.includes("clipboard")
-        ) {
+
+        if (!splitPathname.includes("clipboard")) {
           router.push("/auth/login");
         }
         // setError(error);
