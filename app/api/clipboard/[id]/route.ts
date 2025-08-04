@@ -8,9 +8,12 @@ export const GET = async (request: NextRequest) => {
   const splitUrl = request.url.split("/");
   const finalID = splitUrl[splitUrl.length - 1];
 
-  const clipboard = await prisma.clipboardItem.findMany({
+  const clipboard = await prisma.clipboard.findUnique({
     where: {
-      clipboardId: Number(finalID),
+      id: Number(finalID),
+    },
+    include: {
+      items: true,
     },
   });
   return NextResponse.json(clipboard);
