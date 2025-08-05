@@ -13,7 +13,11 @@ export const GET = async (request: NextRequest) => {
       id: Number(finalID),
     },
     include: {
-      items: true,
+      items: {
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
     },
   });
   return NextResponse.json(clipboard);
