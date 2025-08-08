@@ -23,7 +23,7 @@ const INVITATIONS_COLLECTION =
   process.env.NEXT_PUBLIC_APPWRITE_INVITATIONS_COLLECTION_ID || "invitations";
 
 // Helper function to map Appwrite user to our User type
-const mapAppwriteUser = (user: Models.Document): User => ({
+const mapAppwriteUser = (user: any): User => ({
   $id: user.$id,
   $createdAt: user.$createdAt,
   $updatedAt: user.$updatedAt,
@@ -39,7 +39,7 @@ const mapAppwriteUser = (user: Models.Document): User => ({
 });
 
 // Helper function to map Appwrite invitation to our Invitation type
-const mapAppwriteInvitation = (invitation: Models.Document): Invitation => ({
+const mapAppwriteInvitation = (invitation: any): Invitation => ({
   $id: invitation.$id,
   $collectionId: invitation.$collectionId,
   $databaseId: invitation.$databaseId,

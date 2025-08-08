@@ -162,7 +162,7 @@ export const getClipboardItems = async (
     throw new Error("Clipboard ID is required");
   }
   try {
-    const response = await databases.listDocuments<AppwriteDocument>(
+    const response = await databases.listDocuments(
       DATABASE_ID,
       "clipboard_items",
       [Query.equal("clipboardId", clipboardId), Query.orderDesc("$createdAt")]

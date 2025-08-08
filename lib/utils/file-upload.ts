@@ -101,7 +101,7 @@ export async function handleFileRequest(
     const contentType = ALLOWED_TYPES[fileExt];
 
     // Return the file with appropriate headers
-    return new NextResponse(file, {
+    return new NextResponse(file as any, {
       headers: {
         "Content-Type": contentType,
         "Content-Disposition": `inline; filename="${filename}"`,

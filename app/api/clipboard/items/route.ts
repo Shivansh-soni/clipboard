@@ -1,7 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { PrismaClient } from "@/lib/generated/prisma";
 import { encrypt } from "@/lib/utils/index";
-import { handleError } from "@/lib/utils/handleError";
 const prisma = new PrismaClient();
 
 export const GET = async (request: NextRequest) => {
@@ -38,16 +37,24 @@ export const POST = async (request: NextRequest) => {
 
 export const DELETE = async (request: NextRequest) => {
   const body = await request.json();
-  const { id } = body;
+  const { itemId, clipboardId } = body;
+  if (!itemId || !clipboardId) {
+    return NextResponse.json(
+      { error: "Missing itemId or clipboardId" },
+      { status: 400 }
+    );
+  }
   try {
     const item = await prisma.clipboardItem.delete({
       where: {
-        id: Number(id),
+        id: Number(itemId),
+        clipboardId: Number(clipboardId),
       },
     });
     return NextResponse.json(item);
   } catch (error) {
     console.error(error);
-    return handleError(error);
+    return NextResponse.json({ error: error }, { status: 500 });
+    // return handleError(error);
   }
 };
