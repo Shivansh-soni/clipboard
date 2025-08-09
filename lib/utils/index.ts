@@ -13,16 +13,16 @@ const encrypt = (text: string) => {
   encrypted += cipher.final("hex");
   return { encryptedContent: encrypted, iv: iv.toString("hex") };
 };
-const decrypt = (text: string) => {
+const decrypt = (text: string, iv: string): any => {
   if (!process.env.ENCRYPTION_KEY) {
     throw new Error("ENCRYPTION_KEY is not defined");
   }
-  const iv = Buffer.from(text.split(":")[0], "hex");
-  const encryptedText = text.split(":")[1];
+  const ivBuffer = Buffer.from(iv, "hex");
+  const encryptedText = text;
   const decipher = crypto.createDecipheriv(
     "aes-256-cbc",
     Buffer.from(process.env.ENCRYPTION_KEY, "hex"),
-    iv
+    ivBuffer
   );
   let decrypted = decipher.update(encryptedText, "hex", "utf8");
   decrypted += decipher.final("utf8");
