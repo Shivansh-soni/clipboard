@@ -88,9 +88,7 @@ export const POST = async (request: NextRequest) => {
           : ClipboardItemType.TEXT;
       }
 
-      const encrypted = encrypt(textContent);
-      content = encrypted.encryptedContent;
-      iv = encrypted.iv;
+      content = textContent;
     }
 
     // Prepare content - for files, store as JSON string with metadata
