@@ -131,7 +131,7 @@ export const DELETE = async (request: NextRequest) => {
   try {
     const body = await request.json();
     const { itemId, clipboardId } = body;
-    
+
     if (!itemId || !clipboardId) {
       return NextResponse.json(
         { error: "Missing itemId or clipboardId" },
@@ -152,14 +152,14 @@ export const DELETE = async (request: NextRequest) => {
     }
 
     // 2. If it's a file or image, delete the associated file
-    if (item.type === 'FILE' || item.type === 'IMAGE') {
+    if (item.type === "FILE" || item.type === "IMAGE") {
       try {
         const fileData = JSON.parse(decrypt(item.content, item.iv));
         if (fileData?.filePath) {
           await deleteUploadedFile(fileData.filePath);
         }
       } catch (error) {
-        console.error('Error deleting file:', error);
+        console.error("Error deleting file:", error);
         // Continue with deletion even if file deletion fails
       }
     }
@@ -174,9 +174,59 @@ export const DELETE = async (request: NextRequest) => {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error in DELETE /api/clipboard/items:', error);
+    console.error("Error in DELETE /api/clipboard/items:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal server error' },
+      {
+        error: error instanceof Error ? error.message : "Internal server error",
+      },
+      { status: 500 }
+    );
+  }
+};
+
+export const PATCH = async (request: NextRequest) => {
+  try {
+    const body = await request.json();
+    const { itemId, clipboardId, type, content } = body;
+
+    if (!itemId || !clipboardId) {
+      return NextResponse.json(
+        { error: "Missing itemId or clipboardId" },
+        { status: 400 }
+      );
+    }
+
+    const item = await prisma.clipboardItem.findUnique({
+      where: {
+        id: Number(itemId),
+        clipboardId: Number(clipboardId),
+      },
+    });
+
+    if (!item) {
+      return NextResponse.json({ error: "Item not found" }, { status: 404 });
+    }
+
+    const { encryptedContent, iv } = encrypt(content);
+    const updatedItem = await prisma.clipboardItem.update({
+      where: {
+        id: Number(itemId),
+        clipboardId: Number(clipboardId),
+      },
+      data: {
+        type,
+        content: encryptedContent,
+        iv,
+      },
+    });
+
+    return NextResponse.json(updatedItem);
+  } catch (error) {
+    console.error("Error in PATCH /api/clipboard/items:", error);
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : "Internal server error",
+      },
       { status: 500 }
     );
   }
