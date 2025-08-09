@@ -23,7 +23,9 @@ export async function GET(
     // 2. Get the clipboard item with its associated clipboard
     const item = await prisma.clipboardItem.findUnique({
       where: { id: parseInt(params.id) },
-      include: {
+      select: {
+        content: true,
+        iv: true,
         clipboard: {
           select: {
             pin: true,
@@ -45,15 +47,11 @@ export async function GET(
     // 4. Parse the file metadata from the encrypted content
     let filePath: string;
     try {
-      console.log("item", decrypt(item.content, item.iv));
       const fileData: {
         filePath: string;
-        originalName: string;
-        mimeType: string;
-        size: number;
       } = JSON.parse(decrypt(item.content, item.iv));
       filePath = fileData.filePath;
-      console.log("filePath", filePath);
+
       // Security: Prevent directory traversal
       if (filePath.includes("..") || !filePath.startsWith("/uploads/")) {
         throw new Error("Invalid file path");
@@ -65,7 +63,6 @@ export async function GET(
 
     // 5. Build the full file path
     const fullPath = join(process.cwd(), "private", filePath);
-    console.log("fullPath", fullPath);
     // 6. Check if file exists
     if (!existsSync(fullPath)) {
       return new NextResponse("File not found", { status: 404 });

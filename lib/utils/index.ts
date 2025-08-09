@@ -28,4 +28,19 @@ const decrypt = (text: string, iv: string): any => {
   decrypted += decipher.final("utf8");
   return decrypted;
 };
-export { encrypt, decrypt };
+const decryptFilePath = (text: string, iv: string): { filePath: string } => {
+  if (!process.env.ENCRYPTION_KEY) {
+    throw new Error("ENCRYPTION_KEY is not defined");
+  }
+  const ivBuffer = Buffer.from(iv, "hex");
+  const encryptedText = text;
+  const decipher = crypto.createDecipheriv(
+    "aes-256-cbc",
+    Buffer.from(process.env.ENCRYPTION_KEY, "hex"),
+    ivBuffer
+  );
+  let decrypted: any = decipher.update(encryptedText, "hex", "utf8");
+  decrypted += decipher.final("utf8");
+  return { filePath: decrypted.filePath };
+};
+export { encrypt, decrypt, decryptFilePath };

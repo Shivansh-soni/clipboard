@@ -53,16 +53,42 @@ export const PATCH = async (request: NextRequest) => {
   }
 };
 
+import { deleteUploadedFile } from "@/lib/utils/fileUtils";
+import { decrypt } from "@/lib/utils/index";
+
 export const DELETE = async (request: NextRequest) => {
   const splitUrl = request.url.split("/");
   const finalID = splitUrl[splitUrl.length - 1];
+  
   try {
-    const item = await prisma.clipboardItem.delete({
-      where: {
-        id: Number(finalID),
-      },
+    // 1. First get the item to check if it's a file/image
+    const item = await prisma.clipboardItem.findUnique({
+      where: { id: Number(finalID) },
     });
-    return NextResponse.json(item);
+
+    if (!item) {
+      return new NextResponse("Item not found", { status: 404 });
+    }
+
+    // 2. If it's a file or image, delete the associated file
+    if (item.type === 'FILE' || item.type === 'IMAGE') {
+      try {
+        const fileData = JSON.parse(decrypt(item.content, item.iv));
+        if (fileData?.filePath) {
+          await deleteUploadedFile(fileData.filePath);
+        }
+      } catch (error) {
+        console.error('Error deleting file:', error);
+        // Continue with deletion even if file deletion fails
+      }
+    }
+
+    // 3. Delete the database record
+    await prisma.clipboardItem.delete({
+      where: { id: Number(finalID) },
+    });
+
+    return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error(error);
     return handleError(error);

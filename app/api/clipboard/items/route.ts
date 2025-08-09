@@ -126,26 +126,60 @@ export const POST = async (request: NextRequest) => {
   }
 };
 
+import { deleteUploadedFile } from "@/lib/utils/fileUtils";
+import { decrypt } from "@/lib/utils/index";
+
 export const DELETE = async (request: NextRequest) => {
-  const body = await request.json();
-  const { itemId, clipboardId } = body;
-  if (!itemId || !clipboardId) {
-    return NextResponse.json(
-      { error: "Missing itemId or clipboardId" },
-      { status: 400 }
-    );
-  }
   try {
-    const item = await prisma.clipboardItem.delete({
+    const body = await request.json();
+    const { itemId, clipboardId } = body;
+    
+    if (!itemId || !clipboardId) {
+      return NextResponse.json(
+        { error: "Missing itemId or clipboardId" },
+        { status: 400 }
+      );
+    }
+
+    // 1. First get the item to check if it's a file/image
+    const item = await prisma.clipboardItem.findUnique({
       where: {
         id: Number(itemId),
         clipboardId: Number(clipboardId),
       },
     });
-    return NextResponse.json(item);
+
+    if (!item) {
+      return NextResponse.json({ error: "Item not found" }, { status: 404 });
+    }
+
+    // 2. If it's a file or image, delete the associated file
+    if (item.type === 'FILE' || item.type === 'IMAGE') {
+      try {
+        const fileData = JSON.parse(decrypt(item.content, item.iv));
+        if (fileData?.filePath) {
+          await deleteUploadedFile(fileData.filePath);
+        }
+      } catch (error) {
+        console.error('Error deleting file:', error);
+        // Continue with deletion even if file deletion fails
+      }
+    }
+
+    // 3. Delete the database record
+    await prisma.clipboardItem.delete({
+      where: {
+        id: Number(itemId),
+        clipboardId: Number(clipboardId),
+      },
+    });
+
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: error }, { status: 500 });
-    // return handleError(error);
+    console.error('Error in DELETE /api/clipboard/items:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Internal server error' },
+      { status: 500 }
+    );
   }
 };
