@@ -48,9 +48,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const splitPathname = pathname.split("/");
         console.log("Auth check failed:", error);
 
-        if (!splitPathname.includes("clipboard")) {
-          router.push("/auth/login");
-        }
+        // if (!splitPathname.includes("clipboard")) {
+        //   router.push("/auth/login");
+        // }
         // setError(error);
       } finally {
         setLoading(false);

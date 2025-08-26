@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { account } from "@/lib/appwrite";
 
-const publicPaths = ["/login", "/_next", "/favicon.ico"];
+const publicPaths = ["/login", "/_next", "/favicon.ico", "/trial"];
 
 export async function middleware(request: Request) {
   const { pathname } = new URL(request.url);

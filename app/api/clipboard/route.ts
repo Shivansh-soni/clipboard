@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { PrismaClient } from "@/lib/generated/prisma";
 import { withAuth } from "@/lib/utils/withAuth";
+import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 export const GET = async (request: NextRequest) => {
@@ -11,11 +12,12 @@ export const GET = async (request: NextRequest) => {
 export const POST = withAuth(async (request: NextRequest) => {
   const body = await request.json();
   const { name, description, pin, userId } = body;
+  const encryptedPin = bcrypt.hashSync(pin, 10);
   const clipboard = await prisma.clipboard.create({
     data: {
       name,
       description,
-      pin,
+      pin: encryptedPin,
       userId,
     },
   });
