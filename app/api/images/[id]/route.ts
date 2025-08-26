@@ -87,7 +87,7 @@ export async function GET(
     const contentType = mimeTypes[fileExt || ""] || "application/octet-stream";
 
     // 9. Return the file with appropriate headers
-    return new NextResponse(file, {
+    return new NextResponse(optimizedImage, {
       headers: {
         "Content-Type": contentType,
         "Cache-Control": "private, max-age=3600",
