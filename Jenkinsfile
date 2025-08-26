@@ -16,7 +16,7 @@ pipeline {
             steps {
                 dir(PROJECT_DIR) {
                     sh 'git config --global --add safe.directory /var/www/node/clipboard'
-                    sh 'git pull origin main'
+                    sh 'git pull origin postgres-migration'
                 }
             }
         }
