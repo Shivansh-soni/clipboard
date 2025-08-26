@@ -69,28 +69,19 @@ export async function GET(
 
     // 7. Read the file
     const file = readFileSync(fullPath);
-    const optimizedImage = await sharp(file)
+    const optimizedImage: any = await sharp(file)
       .resize(500) // resize width to 500px, auto height
       .webp({ quality: 80 }) // convert to webp with quality 80
       .toBuffer();
+
     const fileExt = filePath.split(".").pop()?.toLowerCase();
 
-    // 8. Determine content type based on file extension
-    const mimeTypes: Record<string, string> = {
-      jpg: "image/jpeg",
-      jpeg: "image/jpeg",
-      png: "image/png",
-      gif: "image/gif",
-      webp: "image/webp",
-    };
-
-    const contentType = mimeTypes[fileExt || ""] || "application/octet-stream";
-
-    // 9. Return the file with appropriate headers
+    // 8. Return the optimized WebP image with appropriate headers
     return new NextResponse(optimizedImage, {
       headers: {
-        "Content-Type": contentType,
-        "Cache-Control": "private, max-age=3600",
+        "Content-Type": "image/webp", // Always WebP since we're converting
+        "Content-Length": optimizedImage.length.toString(),
+        "Cache-Control": "public, max-age=31536000, immutable",
         "X-Content-Type-Options": "nosniff",
       },
     });
