@@ -3,7 +3,7 @@ import { PrismaClient } from "@/lib/generated/prisma";
 import { join } from "path";
 import { existsSync, readFileSync } from "fs";
 import { decrypt } from "@/lib/utils/index";
-
+import sharp from "sharp";
 const prisma = new PrismaClient();
 
 export async function GET(
@@ -69,6 +69,10 @@ export async function GET(
 
     // 7. Read the file
     const file = readFileSync(fullPath);
+    const optimizedImage = await sharp(file)
+      .resize(500) // resize width to 500px, auto height
+      .webp({ quality: 80 }) // convert to webp with quality 80
+      .toBuffer();
     const fileExt = filePath.split(".").pop()?.toLowerCase();
 
     // 8. Determine content type based on file extension
