@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@/lib/generated/prisma";
 import { join } from "path";
 import { existsSync, readFileSync } from "fs";
-import { compare } from "bcrypt";
 import { decrypt } from "@/lib/utils/index";
 
 const prisma = new PrismaClient();
@@ -39,7 +38,7 @@ export async function GET(
     }
 
     // 3. Verify PIN using bcrypt
-    const isPinValid = await compare(pin, item?.clipboard.pin);
+    const isPinValid = pin === item?.clipboard.pin;
     if (!isPinValid) {
       return new NextResponse("Invalid PIN", { status: 403 });
     }
