@@ -15,6 +15,7 @@ pipeline {
         stage('Pull Changes') {
             steps {
                 dir(PROJECT_DIR) {
+                    sh 'git config --global --add safe.directory /var/www/node/clipboard'
                     sh 'git pull origin main'
                 }
             }
